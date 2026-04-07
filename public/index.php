@@ -11,10 +11,10 @@ require __DIR__ . '/../vendor/autoload.php';
 session_start();
 
 $container = new Container();
-$container->set('renderer', function() {
+$container->set('renderer', function () {
     return new PhpRenderer(__DIR__ . '/../templates');
 });
-$container->set('flash', function() {
+$container->set('flash', function () {
     return new \Slim\Flash\Messages();
 });
 

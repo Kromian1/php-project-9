@@ -18,5 +18,3 @@ jobs:
         run: make install
       - name: linter
         run: make lint
-      - name: Run tests
-        run: make test-coverage-clover

@@ -6,7 +6,7 @@ install:
 dump:
 	composer dump-autoload
 lint:
-	composer exec --verbose phpcs -- --standard=PSR12 src public
+	composer exec --verbose phpcs -- --standard=PSR12 public
 test:
 	composer exec --verbose phpunit tests
 testdox:

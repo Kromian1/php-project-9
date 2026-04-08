@@ -23,12 +23,37 @@
     <?php if(!empty($flash)): ?>
         <?php foreach ($flash as $key => $messages): ?>
             <?php foreach ($messages as $message): ?>
-                <div class="alerts alert-<?= $key === 'error' ? htmlspecialchars('danger') : htmlspecialchars($key) ?>">
+                <div class="alert alert-<?= $key === 'error' ? htmlspecialchars('danger') : htmlspecialchars($key) ?>">
                     <?= htmlspecialchars($message) ?>
                 </div>
             <?php endforeach; ?>
         <?php endforeach; ?>
     <?php endif; ?>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6 bg-secondary-subtle rounded-4 p-4 p-md-5 shadow-sm">
+                <div class="text-center mb-4">
+                    <h1 class="display-4">Анализатор страниц</h1>
+                    <p class="lead">Бесплатно проверяйте сайты на SEO-пригодность</p>
+                </div>
+                <form action="/site" method="post">
+                    <div class="input-group input-group-lg">
+                        <input
+                                type="url"
+                                name="url"
+                                class="form-control"
+                                placeholder="https://www.example.com"
+                                required
+                                value="<?= htmlspecialchars($term ?? '') ?>"
+                        />
+                        <button class="btn btn-primary" type="submit">
+                            ПРОВЕРИТЬ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 </body>

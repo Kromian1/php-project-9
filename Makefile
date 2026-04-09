@@ -1,6 +1,7 @@
 PORT ?= 8000
 start:
-	DATABASE_URL=postgresql://mok1408:1@localhost:5432/page_analyzer_dev PHP_CLI_SERVER_WORKERS=5 php -S 0.0.0.0:$(PORT) -t public
+	#DATABASE_URL=postgresql://mok1408:1@localhost:5432/page_analyzer_dev PHP_CLI_SERVER_WORKERS=5 php -S 0.0.0.0:$(PORT) -t public мак локалхост
+	php -S 0.0.0.0:${PORT} -t public
 install:
 	composer install
 dump:

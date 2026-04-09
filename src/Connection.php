@@ -14,7 +14,7 @@ class Connection
         $username = $parsedUrl['user'];
         $password = $parsedUrl['pass'];
         $host = $parsedUrl['host'];
-        $port = $parsedUrl['port'];
+        $port = $parsedUrl['port'] ?? 5432;
         $dbName = ltrim($parsedUrl['path'], '/');
 
         $dsn = "pgsql:host=$host;port=$port;dbname=$dbName";

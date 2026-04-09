@@ -26,9 +26,9 @@ $app = AppFactory::create();
 $app->addErrorMiddleware(true, true, true);
 
 $app->get('/', function (Request $request, Response $response) use ($container) {
-    $messages = $this->get('flash')->getMessages();
+    $messages = $container->get('flash')->getMessages();
     $params = ['flash' => $messages];
-    return $this->get('renderer')->render($response, 'index.phtml', $params);
+    return $container->get('renderer')->render($response, 'index.phtml', $params);
 });
 
 $app->post('/urls', function (Request $request, Response $response) use ($container, $conn) {
@@ -49,7 +49,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
         foreach ($errors as $error) {
             $container->get('flash')->addMessage('error', $error);
         }
-        return $response->withRedirect('/');
+        return $response->withHeader('Location', '/')->withStatus(302);
     }
 
     $parsedUrl = parse_url($url);
@@ -58,12 +58,12 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     $checkSql = "SELECT id FROM urls WHERE name = :name";
     $stmt = $conn->prepare($checkSql);
     $stmt->bindParam(':name', $normalizedUrl);
-    $stmt->execute($checkSql);
+    $stmt->execute();
     $resultCheck = $stmt->fetch();
 
     if ($resultCheck) {
         $container->get('flash')->addMessage('warning', 'Страница уже существует');
-        return $response->withRedirect('/');
+        return $response->withHeader('Location', '/')->withStatus(302);
     }
 
     $sql = "INSERT INTO urls (name) VALUES (:url)";
@@ -74,7 +74,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     $newId = $conn->lastInsertId();
     $container->get('flash')->addMessage('success', 'Страница успешно добавлена');
 
-    return $response->withRedirect("/urls/$newId");
+    return $response->withHeader('Location', "/urls/$newId")->withStatus(302);
 });
 
 $app->get('/urls', function (Request $request, Response $response) use ($container, $conn) {
@@ -84,6 +84,28 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
     $params = ['urls' => $urls];
 
     return $container->get('renderer')->render($response, 'urls.phtml', $params);
+});
+
+$app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $conn) {
+    $id = $args['id'];
+
+    $sql = "SELECT * FROM urls WHERE id = :id";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':id', $id);
+    $stmt->execute();
+    $url = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$url) {
+        return $response->withStatus(404);
+    }
+    $messages = $container->get('flash')->getMessages();
+
+    $params = [
+        'url' => $url,
+        'flash' => $messages
+    ];
+
+    return $container->get('renderer')->render($response, 'url.phtml', $params);
 });
 
 $app->run();

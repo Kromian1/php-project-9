@@ -34,15 +34,49 @@ $app->get('/', function (Request $request, Response $response) use ($container) 
 
 $app->post('/urls', function (Request $request, Response $response) use ($container, $conn) {
     $data = $request->getParsedBody();
+    //"url" => "http://ric-ivanovo.ru"
+    $url = $data['url'] ?? '';
 
+    $errors = [];
+    if (empty($url)) {
+        $errors[] = 'URL не должен быть пустым';
+    }
+    if (strlen($url) > 255) {
+        $errors[] = 'URL превышает 255 символов';
+    }
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        $errors[] = 'Некорректный URL';
+    }
+    if (!empty($errors)) {
+        foreach ($errors as $error) {
+            $container->get('flash')->addMessage('error', $error);
+        }
+        return $response->withRedirect('/');
+    }
 
+    $parsedUrl = parse_url($url);
+    $normalizedUrl = strtolower($parsedUrl['scheme'] . '://' . $parsedUrl['host']);
 
+    $checkSql = "SELECT id FROM urls WHERE name = :name";
+    $stmt = $conn->prepare($checkSql);
+    $stmt->bindParam(':name', $normalizedUrl);
+    $stmt->execute($checkSql);
+    $resultCheck = $stmt->fetch();
 
+    if ($resultCheck) {
+        $container->get('flash')->addMessage('warning', 'Страница уже существует');
+        return $response->withRedirect('/');
+    }
 
     $sql = "INSERT INTO urls (name) VALUES (:url)";
     $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':url', $data['url']);
+    $stmt->bindParam(':url', $normalizedUrl);
     $stmt->execute();
+
+    $newId = $conn->lastInsertId();
+    $container->get('flash')->addMessage('success', 'Страница успешно добавлена');
+
+    return $response->withRedirect("/urls/$newId");
 });
 
 $app->run();

@@ -7,12 +7,14 @@ class Connection
 {
     public static function get(): PDO
     {
-        $databaseUrl = parse_url($_ENV['DATABASE_URL']);
-        $username = $databaseUrl['user'];
-        $password = $databaseUrl['pass'];
-        $host = $databaseUrl['host'];
-        $port = $databaseUrl['port'];
-        $dbName = ltrim($databaseUrl['path'], '/');
+        $databaseUrl = 'postgresql://mok1408:1@localhost:5432/page_analyzer_dev';
+        $parsedUrl = parse_url($databaseUrl);
+
+        $username = $parsedUrl['user'];
+        $password = $parsedUrl['pass'];
+        $host = $parsedUrl['host'];
+        $port = $parsedUrl['port'];
+        $dbName = ltrim($parsedUrl['path'], '/');
 
         $dsn = "pgsql:host=$host;port=$port;dbname=$dbName";
 

@@ -11,8 +11,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 session_start();
 
-$conn = new Connection();
-$conn->get();
+$conn = Connection::get();
 
 $container = new Container();
 $container->set('renderer', function () {
@@ -34,7 +33,6 @@ $app->get('/', function (Request $request, Response $response) use ($container) 
 
 $app->post('/urls', function (Request $request, Response $response) use ($container, $conn) {
     $data = $request->getParsedBody();
-    //"url" => "http://ric-ivanovo.ru"
     $url = $data['url'] ?? '';
 
     $errors = [];
@@ -77,6 +75,15 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     $container->get('flash')->addMessage('success', 'Страница успешно добавлена');
 
     return $response->withRedirect("/urls/$newId");
+});
+
+$app->get('/urls', function (Request $request, Response $response) use ($container, $conn) {
+    $sql = "SELECT * FROM urls ORDER BY created_at DESC";
+    $stmt = $conn->query($sql);
+    $urls = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $params = ['urls' => $urls];
+
+    return $container->get('renderer')->render($response, 'urls.phtml', $params);
 });
 
 $app->run();

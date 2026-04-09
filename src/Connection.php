@@ -7,7 +7,8 @@ class Connection
 {
     public static function get(): PDO
     {
-        $databaseUrl = 'postgresql://mok1408:1@localhost:5432/page_analyzer_dev';
+        //$databaseUrl = 'postgresql://mok1408:1@localhost:5432/page_analyzer_dev'; для мака тестовый запуск
+        $databaseUrl = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL'); //прод
         $parsedUrl = parse_url($databaseUrl);
 
         $username = $parsedUrl['user'];

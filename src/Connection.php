@@ -17,7 +17,7 @@ class Connection
         $port = $parsedUrl['port'] ?? 5432;
         $dbName = ltrim($parsedUrl['path'], '/');
 
-        $dsn = "pgsql:host=$host;port=$port;dbname=$dbName";
+        $dsn = "pgsql:host=$host;port=$port;dbname=$dbName;sslmode=require";
 
         $pdo = new PDO($dsn, $username, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

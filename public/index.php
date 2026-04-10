@@ -27,16 +27,19 @@ AppFactory::setContainer($container);
 $app = AppFactory::create();
 $app->addErrorMiddleware(true, true, true);
 
-$app->get('/', function (Request $request, Response $response) use ($container) {
+$router = $app->getRouteCollector()->getRouteParser();
+
+$app->get('/', function (Request $request, Response $response) use ($container, $router) {
     $messages = $container->get('flash')->getMessages();
     $params = [
         'flash' => $messages,
-        'title' => 'Анализатор страниц'
+        'title' => 'Анализатор страниц',
+        'router' => $router
     ];
     return $container->get('renderer')->render($response, 'index.phtml', $params);
-});
+})->setName('home');
 
-$app->post('/urls', function (Request $request, Response $response) use ($container, $conn) {
+$app->post('/urls', function (Request $request, Response $response) use ($container, $conn, $router) {
     $data = $request->getParsedBody();
     $url = $data['url'] ?? '';
 
@@ -54,7 +57,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
         foreach ($errors as $error) {
             $container->get('flash')->addMessage('error', $error);
         }
-        return $response->withHeader('Location', '/')->withStatus(302);
+        return $response->withHeader('Location', $router->urlFor('home'))->withStatus(302);
     }
 
     $parsedUrl = parse_url($url);
@@ -68,7 +71,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 
     if ($resultCheck) {
         $container->get('flash')->addMessage('warning', 'Страница уже существует');
-        return $response->withHeader('Location', '/')->withStatus(302);
+        return $response->withHeader('Location', $router->urlFor('home'))->withStatus(302);
     }
 
     $sql = "INSERT INTO urls (name) VALUES (:url)";
@@ -79,8 +82,8 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     $newId = $conn->lastInsertId();
     $container->get('flash')->addMessage('success', 'Страница успешно добавлена');
 
-    return $response->withHeader('Location', "/urls/$newId")->withStatus(302);
-});
+    return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $newId]))->withStatus(302);
+})->setName('urls.post');
 
 $app->get('/urls', function (Request $request, Response $response) use ($container, $conn) {
     $sql = "SELECT * FROM urls ORDER BY created_at DESC";
@@ -92,7 +95,7 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
     ];
 
     return $container->get('renderer')->render($response, 'urls/urls.phtml', $params);
-});
+})->setName('urls.get');
 
 $app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $conn) {
     $id = $args['id'];
@@ -115,6 +118,6 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     ];
 
     return $container->get('renderer')->render($response, 'urls/url.phtml', $params);
-});
+})->setName('url.get');
 
 $app->run();

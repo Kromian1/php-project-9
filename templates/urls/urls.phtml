@@ -1,0 +1,25 @@
+<div class="container">
+    <div class="text-left mb-4">
+        <h1 class="display-4">Сайты</h1>
+    </div>
+    <table data-test="urls" class="table">
+        <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Имя</th>
+            <th scope="col">Дата создания</th>
+            <th scope="col">Код ответа</th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($urls as $url): ?>
+            <tr>
+                <td><?= htmlspecialchars($url['id']) ?></td>
+                <td><a href="/urls/<?= htmlspecialchars($url['id']) ?>"><?= htmlspecialchars($url['name']) ?></a></td>
+                <td><?= htmlspecialchars($url['created_at']) ?></td>
+                <td> <?= htmlspecialchars($url['status_code'] ?? '') ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>

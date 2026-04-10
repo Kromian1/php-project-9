@@ -15,7 +15,9 @@ $conn = Connection::get();
 
 $container = new Container();
 $container->set('renderer', function () {
-    return new PhpRenderer(__DIR__ . '/../templates');
+    $renderer = new PhpRenderer(__DIR__ . '/../templates');
+    $renderer->setLayout('layout.phtml');
+    return $renderer;
 });
 $container->set('flash', function () {
     return new \Slim\Flash\Messages();
@@ -27,7 +29,10 @@ $app->addErrorMiddleware(true, true, true);
 
 $app->get('/', function (Request $request, Response $response) use ($container) {
     $messages = $container->get('flash')->getMessages();
-    $params = ['flash' => $messages];
+    $params = [
+        'flash' => $messages,
+        'title' => 'Анализатор страниц'
+    ];
     return $container->get('renderer')->render($response, 'index.phtml', $params);
 });
 
@@ -81,7 +86,10 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
     $sql = "SELECT * FROM urls ORDER BY created_at DESC";
     $stmt = $conn->query($sql);
     $urls = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $params = ['urls' => $urls];
+    $params = [
+        'urls' => $urls,
+        'title' => 'Сайты'
+    ];
 
     return $container->get('renderer')->render($response, 'urls.phtml', $params);
 });
@@ -102,6 +110,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
 
     $params = [
         'url' => $url,
+        'title' => 'Сайт',
         'flash' => $messages
     ];
 

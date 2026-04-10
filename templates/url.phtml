@@ -54,9 +54,9 @@
     <div class="text-left mb-4">
         <h1 class="display-4">Проверки</h1>
     </div>
-    <button class="btn btn-primary" type="submit">
-        Запустить проверку
-    </button>
+    <form method="post" action="/urls/{id}/cheks">
+        <input type="submit" value="Запустить проверку">
+    </form>
     <table data-test="checks" class="table">
         <thead>
         <tr>

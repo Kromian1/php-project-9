@@ -91,7 +91,7 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
         'title' => 'Сайты'
     ];
 
-    return $container->get('renderer')->render($response, 'urls.phtml', $params);
+    return $container->get('renderer')->render($response, 'urls/urls.phtml', $params);
 });
 
 $app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $conn) {
@@ -114,7 +114,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
         'flash' => $messages
     ];
 
-    return $container->get('renderer')->render($response, 'url.phtml', $params);
+    return $container->get('renderer')->render($response, 'urls/url.phtml', $params);
 });
 
 $app->run();

@@ -6,7 +6,6 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 
 

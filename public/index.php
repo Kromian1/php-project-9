@@ -6,6 +6,7 @@ use Slim\Factory\AppFactory;
 use Slim\Views\PhpRenderer;
 use DI\Container;
 use Db\Connection;
+use Analyzer\UrlValidator;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -22,12 +23,16 @@ $container->set('renderer', function () {
 $container->set('flash', function () {
     return new \Slim\Flash\Messages();
 });
+$container->set('urlValidator', function () {
+    return new UrlValidator();
+});
 
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 $app->addErrorMiddleware(true, true, true);
 
 $router = $app->getRouteCollector()->getRouteParser();
+
 
 $app->get('/', function (Request $request, Response $response) use ($container, $router) {
     $messages = $container->get('flash')->getMessages();
@@ -39,20 +44,13 @@ $app->get('/', function (Request $request, Response $response) use ($container, 
     return $container->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('home');
 
+
 $app->post('/urls', function (Request $request, Response $response) use ($container, $conn, $router) {
     $data = $request->getParsedBody();
     $url = $data['url'] ?? '';
 
-    $errors = [];
-    if (empty($url)) {
-        $errors[] = 'URL не должен быть пустым';
-    }
-    if (strlen($url) > 255) {
-        $errors[] = 'URL превышает 255 символов';
-    }
-    if (!filter_var($url, FILTER_VALIDATE_URL)) {
-        $errors[] = 'Некорректный URL';
-    }
+    $errors = $container->get('urlValidator')->validateUrl($url);
+
     if (!empty($errors)) {
         foreach ($errors as $error) {
             $container->get('flash')->addMessage('error', $error);
@@ -60,8 +58,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
         return $response->withHeader('Location', $router->urlFor('home'))->withStatus(302);
     }
 
-    $parsedUrl = parse_url($url);
-    $normalizedUrl = strtolower($parsedUrl['scheme'] . '://' . $parsedUrl['host']);
+    $normalizedUrl = $container->get('urlValidator')->normalizeUrl($url);
 
     $checkSql = "SELECT id FROM urls WHERE name = :name";
     $stmt = $conn->prepare($checkSql);
@@ -85,6 +82,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $newId]))->withStatus(302);
 })->setName('urls.post');
 
+
 $app->get('/urls', function (Request $request, Response $response) use ($container, $conn) {
     $sql = "SELECT * FROM urls ORDER BY created_at DESC";
     $stmt = $conn->query($sql);
@@ -96,6 +94,7 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
 
     return $container->get('renderer')->render($response, 'urls/urls.phtml', $params);
 })->setName('urls.get');
+
 
 $app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $conn) {
     $id = $args['id'];
@@ -119,5 +118,6 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
 
     return $container->get('renderer')->render($response, 'urls/url.phtml', $params);
 })->setName('url.get');
+
 
 $app->run();

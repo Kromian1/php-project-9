@@ -11,6 +11,7 @@ use Db\Connection;
 use Analyzer\UrlValidator;
 use Analyzer\CheckNormalizer;
 use GuzzleHttp\Client;
+use Symfony\Component\DomCrawler\Crawler;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -33,8 +34,11 @@ $container->set('urlValidator', function () {
 $container->set('checkNormalizer', function () {
     return new CheckNormalizer();
 });
-$container->set('guzzle', function() {
-    return new Client();
+$container->set('guzzle', function () {
+    return new Client([
+        'timeout' => 10,
+        'connect_timeout' => 5
+        ]);
 });
 
 AppFactory::setContainer($container);
@@ -92,7 +96,11 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 
 
 $app->get('/urls', function (Request $request, Response $response) use ($container, $conn) {
-    $sql = "SELECT u.id, u.name, u.created_at, (SELECT status_code FROM url_checks WHERE url_id = u.id ORDER BY created_at DESC LIMIT 1) as status_code FROM urls u ORDER BY created_at DESC";
+    $sql = "
+        SELECT u.id, u.name, u.created_at, 
+       (SELECT status_code FROM url_checks WHERE url_id = u.id ORDER BY created_at DESC LIMIT 1) as status_code 
+        FROM urls u ORDER BY created_at DESC
+        ";
     $stmt = $conn->query($sql);
     $urls = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $params = [
@@ -151,26 +159,40 @@ $app->post(
         $stmt->execute();
         $url = $stmt->fetchColumn();
 
+        $h1 = '';
+        $title = '';
+        $description = '';
         //делаем запрос на проверяемый сайт
         try {
             $guzzleResponse = $container->get('guzzle')->request('GET', $url);
             $statusCode = $guzzleResponse->getStatusCode();
-            //где-то здесь парсинг body
+            //парсинг body сайта
+            $body = (string) $guzzleResponse->getBody();
+            $crawler = new Crawler($body);
+            $h1 = $crawler->filter('h1')->count() ? $crawler->filter('h1')->text() : '';
+            $title = $crawler->filter('title')->count() ? $crawler->filter('title')->text() : '';
+            $description = $crawler->filter('meta[name="description"]')->count()
+                ? $crawler->filter('meta[name="description"]')->attr('content')
+                : '';
         } catch (ConnectException $e) {
             $statusCode = 500;
         } catch (RequestException $e) {
             $statusCode = $e->getResponse()->getStatusCode() ?? 0;
         }
 
-        $sql = "INSERT INTO url_checks (url_id, status_code) VALUES (:url_id, :status_code) RETURNING status_code";
+        $sql = "
+    INSERT INTO url_checks (url_id, status_code, h1, title, description) 
+    VALUES (:url_id, :status_code, :h1, :title, :description)
+";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(':url_id', $id);
         $stmt->bindParam(':status_code', $statusCode);
+        $stmt->bindParam(':h1', $h1);
+        $stmt->bindParam(':title', $title);
+        $stmt->bindParam(':description', $description);
         $stmt->execute();
 
-        $statusCode = $stmt->fetchColumn();
-
-        if ($statusCode === 200) {
+        if ($statusCode == 200) {
             $container->get('flash')->addMessage('success', 'Страница успешно проверена');
             return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $id]))->withStatus(302);
         } else {

@@ -7,6 +7,7 @@ use Slim\Views\PhpRenderer;
 use DI\Container;
 use Db\Connection;
 use Analyzer\UrlValidator;
+use Analyzer\CheckNormalizer;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -25,6 +26,9 @@ $container->set('flash', function () {
 });
 $container->set('urlValidator', function () {
     return new UrlValidator();
+});
+$container->set('CheckNormalizer', function () {
+    return new CheckNormalizer();
 });
 
 AppFactory::setContainer($container);
@@ -115,10 +119,12 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     $stmt->execute();
     $resultChecks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $normalizedChecks = $container->get('CheckNormalizer')->normalizeChecks($resultChecks);
+
     $params = [
         'url' => $url,
         'title' => 'Сайт',
-        'checks' => $resultChecks,
+        'checks' => $normalizedChecks,
         'flash' => $messages,
         'router' => $router
     ];

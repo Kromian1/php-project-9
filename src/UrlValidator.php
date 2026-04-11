@@ -2,22 +2,22 @@
 
 namespace Analyzer;
 
+use valitron\Validator;
+
 class UrlValidator
 {
-    public function validateUrl(string $url): array
+    public function validateUrl(string $url): ?string
     {
-        $errors = [];
-        if (empty($url)) {
-            $errors[] = 'URL не должен быть пустым';
-        }
-        if (strlen($url) > 255) {
-            $errors[] = 'URL превышает 255 символов';
-        }
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            $errors[] = 'Некорректный URL';
-        }
+        $v = new Validator(['url' => $url]);
 
-        return $errors;
+        $v->rule('required', 'url')->message('URL не должен быть пустым');
+        $v->rule('lengthMax', 'url', 255)->message('URL превышает 255 символов');
+        $v->rule('url', 'url')->message('Некорректный URL');
+
+        $v->validate();
+        $error = $v->errors();
+
+        return $error['url'][0] ?? null;
     }
 
     public function normalizeUrl(string $url): string

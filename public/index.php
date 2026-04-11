@@ -49,12 +49,10 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     $data = $request->getParsedBody();
     $url = $data['url'] ?? '';
 
-    $errors = $container->get('urlValidator')->validateUrl($url);
+    $error = $container->get('urlValidator')->validateUrl($url);
 
-    if (!empty($errors)) {
-        foreach ($errors as $error) {
-            $container->get('flash')->addMessage('error', $error);
-        }
+    if ($error) {
+        $container->get('flash')->addMessage('error', $error);
         return $response->withHeader('Location', $router->urlFor('home'))->withStatus(302);
     }
 

@@ -23,29 +23,31 @@
     <div class="text-left mb-4">
         <h1 class="display-4">Проверки</h1>
     </div>
-    <form method="post" action="/urls/{id}/cheks">
+    <form method="post" action="<?= $router->urlFor('url.check.post', ['id' => $url['id']]) ?>">
         <input type="submit" value="Запустить проверку">
     </form>
     <table data-test="checks" class="table">
         <thead>
-        <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Код ответа</th>
-            <th scope="col">h1</th>
-            <th scope="col">title</th>
-            <th scope="col">description</th>
-            <th scope="col">Дата создания</th>
-        </tr>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Код ответа</th>
+                <th scope="col">h1</th>
+                <th scope="col">title</th>
+                <th scope="col">description</th>
+                <th scope="col">Дата создания</th>
+            </tr>
         </thead>
         <tbody>
+        <?php foreach ($checks as $check): ?>
             <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td><?= htmlspecialchars($check['id']) ?></td>
+                <td><?= htmlspecialchars($check['status_code']) ?></td>
+                <td><?= htmlspecialchars($check['h1']) ?></td>
+                <td><?= htmlspecialchars($check['title']) ?></td>
+                <td><?= htmlspecialchars($check['description']) ?></td>
+                <td><?= htmlspecialchars($check['created_at']) ?></td>
             </tr>
+        <?php endforeach; ?>
         </tbody>
     </table>
  </div>

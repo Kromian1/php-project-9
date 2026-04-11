@@ -2,7 +2,7 @@
 
 namespace Analyzer;
 
-use valitron\Validator;
+use Valitron\Validator;
 
 class UrlValidator
 {

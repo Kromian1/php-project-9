@@ -94,7 +94,7 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
 })->setName('urls.get');
 
 
-$app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $conn) {
+$app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $conn, $router) {
     $id = $args['id'];
 
     $sql = "SELECT * FROM urls WHERE id = :id";
@@ -108,14 +108,46 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     }
     $messages = $container->get('flash')->getMessages();
 
+    //здесь получение данных по проверкам
+    $sql = "SELECT * FROM url_checks WHERE url_id = :id ORDER BY created_at DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':id', $id);
+    $stmt->execute();
+    $resultChecks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
     $params = [
         'url' => $url,
         'title' => 'Сайт',
-        'flash' => $messages
+        'checks' => $resultChecks,
+        'flash' => $messages,
+        'router' => $router
     ];
 
     return $container->get('renderer')->render($response, 'urls/url.phtml', $params);
 })->setName('url.get');
 
+$app->post(
+    '/urls/{id}/checks',
+    function (Request $request, Response $response, $args) use ($container, $conn, $router) {
+    //запрос к нужному ресурсу, затем результат вносим в бд и отправляем в шаблон.
+    //так как сейчас запрос не делается, просто добавляем пустую запись в бд
+        $id = $args['id'];
+
+        $sql = "INSERT INTO url_checks (url_id, status_code) VALUES (:url_id, 200) RETURNING status_code";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':url_id', $id);
+        $stmt->execute();
+
+        $statusCode = $stmt->fetchColumn();
+
+        if ($statusCode === 200) {
+            $container->get('flash')->addMessage('success', 'Страница успешно проверена');
+            return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $id]))->withStatus(302);
+        } else {
+            $container->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
+            return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $id]))->withStatus(302);
+        }
+    }
+)->setName('url.check.post');
 
 $app->run();

@@ -1,5 +1,7 @@
 <?php
 
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
@@ -8,6 +10,7 @@ use DI\Container;
 use Db\Connection;
 use Analyzer\UrlValidator;
 use Analyzer\CheckNormalizer;
+use GuzzleHttp\Client;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -27,8 +30,11 @@ $container->set('flash', function () {
 $container->set('urlValidator', function () {
     return new UrlValidator();
 });
-$container->set('CheckNormalizer', function () {
+$container->set('checkNormalizer', function () {
     return new CheckNormalizer();
+});
+$container->set('guzzle', function() {
+    return new Client();
 });
 
 AppFactory::setContainer($container);
@@ -86,7 +92,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 
 
 $app->get('/urls', function (Request $request, Response $response) use ($container, $conn) {
-    $sql = "SELECT * FROM urls ORDER BY created_at DESC";
+    $sql = "SELECT u.id, u.name, u.created_at, (SELECT status_code FROM url_checks WHERE url_id = u.id ORDER BY created_at DESC LIMIT 1) as status_code FROM urls u ORDER BY created_at DESC";
     $stmt = $conn->query($sql);
     $urls = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $params = [
@@ -119,7 +125,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     $stmt->execute();
     $resultChecks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $normalizedChecks = $container->get('CheckNormalizer')->normalizeChecks($resultChecks);
+    $normalizedChecks = $container->get('checkNormalizer')->normalizeChecks($resultChecks);
 
     $params = [
         'url' => $url,
@@ -139,9 +145,27 @@ $app->post(
     //так как сейчас запрос не делается, просто добавляем пустую запись в бд
         $id = $args['id'];
 
-        $sql = "INSERT INTO url_checks (url_id, status_code) VALUES (:url_id, 200) RETURNING status_code";
+        $sql = "SELECT name FROM urls WHERE id = :id";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $url = $stmt->fetchColumn();
+
+        //делаем запрос на проверяемый сайт
+        try {
+            $guzzleResponse = $container->get('guzzle')->request('GET', $url);
+            $statusCode = $guzzleResponse->getStatusCode();
+            //где-то здесь парсинг body
+        } catch (ConnectException $e) {
+            $statusCode = 500;
+        } catch (RequestException $e) {
+            $statusCode = $e->getResponse()->getStatusCode() ?? 0;
+        }
+
+        $sql = "INSERT INTO url_checks (url_id, status_code) VALUES (:url_id, :status_code) RETURNING status_code";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(':url_id', $id);
+        $stmt->bindParam(':status_code', $statusCode);
         $stmt->execute();
 
         $statusCode = $stmt->fetchColumn();

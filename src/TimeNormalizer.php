@@ -15,7 +15,7 @@ class TimeNormalizer
 
         return array_map(function ($item) use ($format) {
             if (isset($item['created_at'])) {
-                $item['created_at'] = Carbon::parse($item['created_at'])->format($format);
+                $item['created_at'] = Carbon::parse($item['created_at'], 'Europe/Moscow')->format($format);
             }
             return $item;
         }, $array);

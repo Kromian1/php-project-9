@@ -26,7 +26,7 @@ class CheckNormalizer
             'h1' => $this->truncate($check['h1']),
             'title' => $this->truncate($check['title']),
             'description' => $this->truncate($check['description']),
-            'created_at' => Carbon::parse($check['created_at'])->format('Y-m-d H:i')
+            'created_at' => Carbon::parse($check['created_at'], 'Europe/Moscow')->format('Y-m-d H:i')
         ];
     }
 

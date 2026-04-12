@@ -12,6 +12,7 @@ use Analyzer\UrlValidator;
 use Analyzer\CheckNormalizer;
 use GuzzleHttp\Client;
 use Symfony\Component\DomCrawler\Crawler;
+use Analyzer\TimeNormalizer;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -39,6 +40,9 @@ $container->set('guzzle', function () {
         'timeout' => 10,
         'connect_timeout' => 5
         ]);
+});
+$container->set('TimeNormalizer', function () {
+    return new TimeNormalizer();
 });
 
 AppFactory::setContainer($container);
@@ -103,8 +107,10 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
         ";
     $stmt = $conn->query($sql);
     $urls = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $normalizedTimeUrls = $container->get('TimeNormalizer')->normalizeTime($urls);
+
     $params = [
-        'urls' => $urls,
+        'urls' => $normalizedTimeUrls,
         'title' => 'Сайты'
     ];
 
@@ -121,7 +127,9 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     $stmt->execute();
     $url = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$url) {
+    $normalizedTimeUrl = $container->get('TimeNormalizer')->normalizeTime($url);
+
+    if (!$normalizedTimeUrl) {
         return $response->withStatus(404);
     }
     $messages = $container->get('flash')->getMessages();
@@ -136,7 +144,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     $normalizedChecks = $container->get('checkNormalizer')->normalizeChecks($resultChecks);
 
     $params = [
-        'url' => $url,
+        'url' => $normalizedTimeUrl,
         'title' => 'Сайт',
         'checks' => $normalizedChecks,
         'flash' => $messages,

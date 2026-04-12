@@ -23,7 +23,8 @@
         "vlucas/valitron": "^1.4",
         "guzzlehttp/guzzle": "^7.10",
         "symfony/dom-crawler": "^8.0",
-        "symfony/css-selector": "^8.0"
+        "symfony/css-selector": "^8.0",
+        "nesbot/carbon": "^3.11"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^4.0",

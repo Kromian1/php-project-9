@@ -118,7 +118,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
 
     //получаем данные по проверкам url
     $resultChecks = $urlRepo->getChecks($id);
-    $normalizedChecks = $container->get('Analyzer\TimeNormalizer')->normalizeTime($resultChecks, 'Y-m-d H:i');
+    $normalizedChecks = $container->get('TimeNormalizer')->normalizeTime($resultChecks, 'Y-m-d H:i');
 
     $params = [
         'url' => $normalizedTimeUrl,
@@ -147,7 +147,7 @@ $app->post(
             $container->get('flash')->addMessage('success', 'Страница успешно проверена');
             //делаем парсинг
             $parsedBody = $container->get('HtmlParser')->parse($body);
-            $normalizedBody = $container->get('CheckNormalizer')->normalizeCheckBody($parsedBody);
+            $normalizedBody = $container->get('checkNormalizer')->normalizeCheckBody($parsedBody);
             //вставляем результат запроса к ресурсу в БД
             $urlRepo->updateChecks($id, $statusCode, $normalizedBody);
             return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $id]))->withStatus(302);

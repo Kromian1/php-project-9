@@ -77,11 +77,11 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     $normalizedUrl = $container->get('urlValidator')->normalizeUrl($url);
 
     //здесь проверяем существует ли в БД сайт
-    $resultCheck = $urlRepo->getId($normalizedUrl);
+    $existingId = $urlRepo->getId($normalizedUrl);
 
-    if ($resultCheck) {
+    if ($existingId) {
         $container->get('flash')->addMessage('warning', 'Страница уже существует');
-        return $response->withHeader('Location', $router->urlFor('home'))->withStatus(302);
+        return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $existingId]))->withStatus(302);
     }
     //если сайт не существует в БД, то добавляем его в БД
     $newId = $urlRepo->addUrl($normalizedUrl);

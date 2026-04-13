@@ -55,7 +55,7 @@ class UrlRepository
     {
         $sql = "
         SELECT u.id, u.name, u.created_at,
-       (SELECT status_code FROM url_checks WHERE url_id = u.id ORDER BY created_at DESC LIMIT 1) as status_code 
+       (SELECT status_code FROM url_checks WHERE url_id = u.id ORDER BY created_at DESC LIMIT 1) as status_code
         FROM urls u ORDER BY created_at DESC
         ";
         $stmt = $this->pdo->query($sql);

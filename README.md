@@ -11,3 +11,21 @@
 
 ### Доступ к проекту:
 https://php-project-9-d7cw.onrender.com
+
+# Анализатор страниц
+Проект анализирует web-сайты на CEO-пригодность.
+Проект написан на PHP, фреймворке Slim и Bootstrap.
+
+## Требования
+
+- PHP 8.3
+- Composer
+
+##  Установка и запуск
+
+- git clone https://github.com/Kromian1/php-project-9.git
+- cd php-project-9
+- make install
+- make dump
+- make start
+

@@ -1,7 +1,7 @@
 <?php
 
-use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Exception\RequestException;
+use Analyzer\HttpClient;
+use Analyzer\HtmlParser;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
@@ -10,15 +10,15 @@ use DI\Container;
 use Db\Connection;
 use Analyzer\UrlValidator;
 use Analyzer\CheckNormalizer;
-use GuzzleHttp\Client;
-use Symfony\Component\DomCrawler\Crawler;
 use Analyzer\TimeNormalizer;
+use Db\UrlRepository;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 session_start();
 
 $conn = Connection::get();
+$urlRepo = new UrlRepository($conn);
 
 $container = new Container();
 $container->set('renderer', function () {
@@ -35,14 +35,14 @@ $container->set('urlValidator', function () {
 $container->set('checkNormalizer', function () {
     return new CheckNormalizer();
 });
-$container->set('guzzle', function () {
-    return new Client([
-        'timeout' => 10,
-        'connect_timeout' => 5
-        ]);
+$container->set('HttpClient', function () {
+    return new HttpClient();
 });
 $container->set('TimeNormalizer', function () {
     return new TimeNormalizer();
+});
+$container->set('HtmlParser', function () {
+    return new HtmlParser();
 });
 
 AppFactory::setContainer($container);
@@ -63,10 +63,10 @@ $app->get('/', function (Request $request, Response $response) use ($container, 
 })->setName('home');
 
 
-$app->post('/urls', function (Request $request, Response $response) use ($container, $conn, $router) {
+$app->post('/urls', function (Request $request, Response $response) use ($container, $urlRepo, $router) {
     $data = $request->getParsedBody();
     $url = $data['url'] ?? '';
-
+    //собираем ошибки
     $error = $container->get('urlValidator')->validateUrl($url);
 
     if ($error) {
@@ -76,37 +76,24 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 
     $normalizedUrl = $container->get('urlValidator')->normalizeUrl($url);
 
-    $checkSql = "SELECT id FROM urls WHERE name = :name";
-    $stmt = $conn->prepare($checkSql);
-    $stmt->bindParam(':name', $normalizedUrl);
-    $stmt->execute();
-    $resultCheck = $stmt->fetch();
+    //здесь проверяем существует ли в БД сайт
+    $resultCheck = $urlRepo->getId($normalizedUrl);
 
     if ($resultCheck) {
         $container->get('flash')->addMessage('warning', 'Страница уже существует');
         return $response->withHeader('Location', $router->urlFor('home'))->withStatus(302);
     }
-
-    $sql = "INSERT INTO urls (name) VALUES (:url)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':url', $normalizedUrl);
-    $stmt->execute();
-
-    $newId = $conn->lastInsertId();
+    //если сайт не существует в БД, то добавляем его в БД
+    $newId = $urlRepo->addUrl($normalizedUrl);
     $container->get('flash')->addMessage('success', 'Страница успешно добавлена');
 
     return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $newId]))->withStatus(302);
 })->setName('urls.post');
 
 
-$app->get('/urls', function (Request $request, Response $response) use ($container, $conn) {
-    $sql = "
-        SELECT u.id, u.name, u.created_at, 
-       (SELECT status_code FROM url_checks WHERE url_id = u.id ORDER BY created_at DESC LIMIT 1) as status_code 
-        FROM urls u ORDER BY created_at DESC
-        ";
-    $stmt = $conn->query($sql);
-    $urls = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$app->get('/urls', function (Request $request, Response $response) use ($container, $urlRepo) {
+    //получаем список сайтов из БД с последним состоянием (код ответа)
+    $urls = $urlRepo->getAllUrls();
     $normalizedTimeUrls = $container->get('TimeNormalizer')->normalizeTime($urls);
 
     $params = [
@@ -118,15 +105,10 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
 })->setName('urls.get');
 
 
-$app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $conn, $router) {
+$app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $urlRepo, $router) {
     $id = $args['id'];
-
-    $sql = "SELECT * FROM urls WHERE id = :id";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':id', $id);
-    $stmt->execute();
-    $url = $stmt->fetch(PDO::FETCH_ASSOC);
-
+    //получение url
+    $url = $urlRepo->getUrl($id);
     $normalizedTimeUrl = $container->get('TimeNormalizer')->normalizeTime($url);
 
     if (!$normalizedTimeUrl) {
@@ -134,13 +116,8 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     }
     $messages = $container->get('flash')->getMessages();
 
-    //здесь получение данных по проверкам
-    $sql = "SELECT * FROM url_checks WHERE url_id = :id ORDER BY created_at DESC";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':id', $id);
-    $stmt->execute();
-    $resultChecks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+    //получаем данные по проверкам url
+    $resultChecks = $urlRepo->getChecks($id);
     $normalizedChecks = $container->get('checkNormalizer')->normalizeChecks($resultChecks);
 
     $params = [
@@ -156,52 +133,25 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
 
 $app->post(
     '/urls/{id}/checks',
-    function (Request $request, Response $response, $args) use ($container, $conn, $router) {
-    //запрос к нужному ресурсу, затем результат вносим в бд и отправляем в шаблон.
-    //так как сейчас запрос не делается, просто добавляем пустую запись в бд
+    function (Request $request, Response $response, $args) use ($container, $urlRepo, $router) {
         $id = $args['id'];
+        //получаем url, для проверки ресурса
+        $url = $urlRepo->getUrlName($id);
 
-        $sql = "SELECT name FROM urls WHERE id = :id";
-        $stmt = $conn->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        $url = $stmt->fetchColumn();
-
-        $h1 = '';
-        $title = '';
-        $description = '';
         //делаем запрос на проверяемый сайт
-        try {
-            $guzzleResponse = $container->get('guzzle')->request('GET', $url);
-            $statusCode = $guzzleResponse->getStatusCode();
-            //парсинг body сайта
-            $body = (string) $guzzleResponse->getBody();
-            $crawler = new Crawler($body);
-            $h1 = $crawler->filter('h1')->count() ? $crawler->filter('h1')->text() : '';
-            $title = $crawler->filter('title')->count() ? $crawler->filter('title')->text() : '';
-            $description = $crawler->filter('meta[name="description"]')->count()
-                ? $crawler->filter('meta[name="description"]')->attr('content')
-                : '';
-        } catch (ConnectException $e) {
-            $statusCode = 500;
-        } catch (RequestException $e) {
-            $statusCode = $e->getResponse()->getStatusCode() ?? 0;
-        }
-
-        $sql = "
-    INSERT INTO url_checks (url_id, status_code, h1, title, description) 
-    VALUES (:url_id, :status_code, :h1, :title, :description)
-";
-        $stmt = $conn->prepare($sql);
-        $stmt->bindParam(':url_id', $id);
-        $stmt->bindParam(':status_code', $statusCode);
-        $stmt->bindParam(':h1', $h1);
-        $stmt->bindParam(':title', $title);
-        $stmt->bindParam(':description', $description);
-        $stmt->execute();
+        $answer = $container->get('HttpClient')->fetch('GET', $url);
+        $statusCode = $answer['statusCode'];
+        $body = $answer['body'] ?? '';
 
         if ($statusCode == 200) {
             $container->get('flash')->addMessage('success', 'Страница успешно проверена');
+            //делаем парсинг
+            $parsedBody = $container->get('HtmlParser')->parse($body);
+            $h1 = $parsedBody['h1'] ?? '';
+            $title = $parsedBody['title'] ?? '';
+            $description = $parsedBody['description'] ?? '';
+            //вставляем результат запроса к ресурсу в БД
+            $urlRepo->updateChecks($id, $statusCode, $h1, $title, $description);
             return $response->withHeader('Location', $router->urlFor('url.get', ['id' => $id]))->withStatus(302);
         } else {
             $container->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');

@@ -7,7 +7,7 @@ class Connection
 {
     public static function get(): PDO
     {
-        $databaseUrl = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL'); //прод
+        $databaseUrl = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL');
         $parsedUrl = parse_url($databaseUrl);
 
         $username = $parsedUrl['user'];

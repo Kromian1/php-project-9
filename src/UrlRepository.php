@@ -19,7 +19,7 @@ class UrlRepository
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':name', $url);
         $stmt->execute();
-        return $stmt->fetch();
+        return $stmt->fetchColumn();
     }
 
     public function addUrl(string $url)

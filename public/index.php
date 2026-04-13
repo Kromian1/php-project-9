@@ -13,7 +13,7 @@ use Analyzer\CheckNormalizer;
 use Analyzer\TimeNormalizer;
 use Db\UrlRepository;
 
-require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 session_start();
 
@@ -52,7 +52,7 @@ $app->addErrorMiddleware(true, true, true);
 $router = $app->getRouteCollector()->getRouteParser();
 
 
-$app->get('/', function (Request $request, Response $response) use ($container, $router) {
+$app->get('/', function (Response $response) use ($container, $router) {
     $messages = $container->get('flash')->getMessages();
     $params = [
         'flash' => $messages,
@@ -91,7 +91,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 })->setName('urls.post');
 
 
-$app->get('/urls', function (Request $request, Response $response) use ($container, $urlRepo) {
+$app->get('/urls', function (Response $response) use ($container, $urlRepo) {
     //получаем список сайтов из БД с последним состоянием (код ответа)
     $urls = $urlRepo->getAllUrls();
     $normalizedTimeUrls = $container->get('TimeNormalizer')->normalizeTime($urls);
@@ -105,7 +105,7 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
 })->setName('urls.get');
 
 
-$app->get('/urls/{id}', function (Request $request, Response $response, $args) use ($container, $urlRepo, $router) {
+$app->get('/urls/{id}', function (Response $response, $args) use ($container, $urlRepo, $router) {
     $id = $args['id'];
     //получение url
     $url = $urlRepo->getUrl($id);
@@ -133,7 +133,7 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
 
 $app->post(
     '/urls/{id}/checks',
-    function (Request $request, Response $response, $args) use ($container, $urlRepo, $router) {
+    function (Response $response, $args) use ($container, $urlRepo, $router) {
         $id = $args['id'];
         //получаем url, для проверки ресурса
         $url = $urlRepo->getUrlName($id);

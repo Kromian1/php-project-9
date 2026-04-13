@@ -54,7 +54,7 @@ class UrlRepository
     public function getAllUrls()
     {
         $sql = "
-        SELECT u.id, u.name, u.created_at, 
+        SELECT u.id, u.name, u.created_at,
        (SELECT status_code FROM url_checks WHERE url_id = u.id ORDER BY created_at DESC LIMIT 1) as status_code 
         FROM urls u ORDER BY created_at DESC
         ";
@@ -74,7 +74,7 @@ class UrlRepository
     public function updateChecks(string $id, string $statusCode, string $h1, string $title, string $description)
     {
         $sql = "
-    INSERT INTO url_checks (url_id, status_code, h1, title, description) 
+    INSERT INTO url_checks (url_id, status_code, h1, title, description)
     VALUES (:url_id, :status_code, :h1, :title, :description)
 ";
         $stmt = $this->pdo->prepare($sql);
@@ -85,5 +85,4 @@ class UrlRepository
         $stmt->bindParam(':description', $description);
         $stmt->execute();
     }
-
 }

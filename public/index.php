@@ -71,14 +71,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 
     if ($error) {
         $container->get('flash')->addMessage('error', $error);
-
-        $messages = $container->get('flash')->getMessages();
-        $params = [
-            'flash' => $messages,
-            'title' => 'Анализатор страниц',
-            'router' => $router
-        ];
-        return $container->get('renderer')->render($response, 'index.phtml', $params)->withStatus(422);
+        return $response->withHeader('Location', $router->urlFor('home'))->withStatus(422);
     }
 
     $normalizedUrl = $container->get('urlValidator')->normalizeUrl($url);

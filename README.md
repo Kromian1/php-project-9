@@ -83,6 +83,7 @@
 ### 1. Клонирование репозитория
 
 git clone https://github.com/Kromian1/php-project-9.git
+
 cd php-project-9
 
 ### 2. Установка зависимостей
@@ -92,17 +93,21 @@ make install
 ### 3. Настройка базы данных
 
 Создайте базу данных PostgreSQL:
+
 createdb page_analyzer_dev
 
 Экспортируйте переменную окружения:
+
 export DATABASE_URL=postgresql://localhost:5432/page_analyzer_dev
 
 Выполните миграцию:
+
 psql -a -d $DATABASE_URL -f database.sql
 
 ### 4. Запуск приложения
 
 make start
+
 Приложение будет доступно по адресу: http://localhost:8000
 
 ### 5. Запуск тестов

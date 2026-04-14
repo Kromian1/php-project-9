@@ -63,7 +63,8 @@ $app->get('/', function (Request $request, Response $response) use ($container, 
 
 
 $app->post('/urls', function (Request $request, Response $response) use ($container, $urlRepo, $router) {
-    $data = $request->getParsedBody();
+    $parsedBody = $request->getParsedBody();
+    $data = is_array($parsedBody) ? $parsedBody : (array) $parsedBody;
     $url = $data['url'] ?? '';
     //собираем ошибки
     $error = $container->get('urlValidator')->validateUrl($url);

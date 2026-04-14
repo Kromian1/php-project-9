@@ -8,7 +8,7 @@ use GuzzleHttp\Exception\RequestException;
 
 class HttpClient
 {
-    private object $client;
+    private Client $client;
 
     public function __construct(int $timeout = 10, int $connectTimeout = 5)
     {
@@ -33,7 +33,7 @@ class HttpClient
             ];
         } catch (RequestException $e) {
             return [
-                'statusCode' => $e->getResponse()->getStatusCode() ?? 0
+                'statusCode' => $e->getResponse()->getStatusCode()
             ];
         }
     }

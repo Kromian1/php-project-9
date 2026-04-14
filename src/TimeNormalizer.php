@@ -6,7 +6,7 @@ use Carbon\Carbon;
 
 class TimeNormalizer
 {
-    public function normalizeTime(array $array,  string $format = 'Y-m-d'): array
+    public function normalizeTime(array $array, string $format = 'Y-m-d'): array
     {
         if (isset($array['created_at'])) {
             $array['created_at'] = Carbon::parse($array['created_at'])->format($format);

@@ -1,6 +1,7 @@
 <?php
 
 namespace Db;
+
 use PDO;
 
 class Connection

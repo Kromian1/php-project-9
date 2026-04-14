@@ -32,8 +32,14 @@ class HttpClient
                 'statusCode' => 500
             ];
         } catch (RequestException $e) {
+            $response = $e->getResponse();
+            if ($response) {
+                return [
+                    'statusCode' => $response->getStatusCode()
+                ];
+            }
             return [
-                'statusCode' => $e->getResponse()->getStatusCode()
+                'statusCode' => 503
             ];
         }
     }

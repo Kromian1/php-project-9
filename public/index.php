@@ -69,7 +69,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     $error = $container->get('urlValidator')->validateUrl($url);
 
     if ($error) {
-        $container->get('flash')->now()->addMessage('error', $error);
+        $container->get('flash')->addMessageNow('error', $error);
         $params = [
             'title' => 'Анализатор страниц',
             'router' => $router

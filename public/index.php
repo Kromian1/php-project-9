@@ -21,9 +21,10 @@ $conn = Connection::get();
 $urlRepo = new UrlRepository($conn);
 
 $container = new Container();
-$container->set('renderer', function () {
+$container->set('renderer', function () use ($container) {
     $renderer = new PhpRenderer(__DIR__ . '/../templates');
     $renderer->setLayout('layout.phtml');
+    $renderer->addAttribute('flash', $container->get('flash')->getMessages());
     return $renderer;
 });
 $container->set('flash', function () {
@@ -53,9 +54,7 @@ $router = $app->getRouteCollector()->getRouteParser();
 
 
 $app->get('/', function (Request $request, Response $response) use ($container, $router) {
-    $messages = $container->get('flash')->getMessages();
     $params = [
-        'flash' => $messages,
         'title' => 'Анализатор страниц',
         'router' => $router
     ];
@@ -71,7 +70,11 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 
     if ($error) {
         $container->get('flash')->addMessage('error', $error);
-        return $response->withHeader('Location', $router->urlFor('home'))->withStatus(302);
+        $params = [
+            'title' => 'Анализатор страниц',
+            'router' => $router
+        ];
+        return $container->get('renderer')->render($response, 'index.phtml', $params)->withStatus(422);
     }
 
     $normalizedUrl = $container->get('urlValidator')->normalizeUrl($url);
@@ -114,7 +117,6 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
     if (!$normalizedTimeUrl) {
         return $response->withStatus(404);
     }
-    $messages = $container->get('flash')->getMessages();
 
     //получаем данные по проверкам url
     $resultChecks = $urlRepo->getChecks($id);
@@ -124,7 +126,6 @@ $app->get('/urls/{id}', function (Request $request, Response $response, $args) u
         'url' => $normalizedTimeUrl,
         'title' => 'Сайт',
         'checks' => $normalizedChecks,
-        'flash' => $messages,
         'router' => $router
     ];
 

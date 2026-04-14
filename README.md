@@ -44,7 +44,7 @@
 | **Фреймворк** | Slim 4 |
 | **Шаблонизация** | Slim PHP-View |
 | **База данных** | PostgreSQL |
-| **ORM/DBAL** | PDO |
+| **ORM** | PDO |
 | **HTTP-клиент** | Guzzle |
 | **Парсинг HTML** | Symfony DomCrawler |
 | **Валидация** | Valitron |

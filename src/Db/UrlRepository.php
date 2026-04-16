@@ -15,7 +15,14 @@ class UrlRepository
 
     public function getId(string $url)
     {
-        $sql = "SELECT id FROM urls WHERE name = :name";
+        $sql = "
+    SELECT
+        id
+    FROM
+        urls
+    WHERE
+        name = :name
+        ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':name', $url);
         $stmt->execute();
@@ -34,7 +41,13 @@ class UrlRepository
 
     public function getUrl(string $id)
     {
-        $sql = "SELECT * FROM urls WHERE id = :id";
+        $sql = "
+    SELECT
+        *
+    FROM
+        urls
+    WHERE id = :id
+        ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -44,7 +57,14 @@ class UrlRepository
 
     public function getUrlName(string $id)
     {
-        $sql = "SELECT name FROM urls WHERE id = :id";
+        $sql = "
+    SELECT
+        name
+    FROM
+        urls
+    WHERE
+        id = :id
+        ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -54,9 +74,21 @@ class UrlRepository
     public function getAllUrls()
     {
         $sql = "
-        SELECT u.id, u.name, u.created_at,
-       (SELECT status_code FROM url_checks WHERE url_id = u.id ORDER BY created_at DESC LIMIT 1) as status_code
-        FROM urls u ORDER BY created_at DESC
+    WITH ranked_checks AS (
+        SELECT 
+            url_id,
+            status_code,
+            ROW_NUMBER() OVER (PARTITION BY url_id ORDER BY created_at DESC) AS rn
+        FROM url_checks
+    )
+    SELECT 
+        u.id,
+        u.name,
+        u.created_at,
+        rc.status_code
+    FROM urls u
+    LEFT JOIN ranked_checks rc ON u.id = rc.url_id AND rc.rn = 1
+    ORDER BY u.created_at DESC
         ";
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -64,7 +96,16 @@ class UrlRepository
 
     public function getChecks(string $id)
     {
-        $sql = "SELECT * FROM url_checks WHERE url_id = :id ORDER BY created_at DESC";
+        $sql = "
+    SELECT
+        *
+    FROM
+        url_checks
+    WHERE
+        url_id = :id
+    ORDER BY
+        created_at DESC
+        ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':id', $id);
         $stmt->execute();

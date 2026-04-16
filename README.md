@@ -68,6 +68,7 @@
     templates/
     ├── layout.phtml            # Базовый шаблон (Bootstrap, меню)
     ├── index.phtml             # Главная страница (форма добавления)
+    ├── 404.phtml               # Страница ошибки 404
     └── urls/
         ├── index.phtml          # Список всех сайтов
         └── show.phtml           # Детальная страница сайта

@@ -86,7 +86,8 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
     if ($error) {
         $container->get('flash')->addMessageNow('error', $error);
         $params = [
-            'title' => 'Анализатор страниц'
+            'title' => 'Анализатор страниц',
+            'flash' => $container->get('flash')->getMessages()
         ];
         return $container->get('renderer')->render($response, 'index.phtml', $params)->withStatus(422);
     }

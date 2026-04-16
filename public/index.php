@@ -52,13 +52,15 @@ $app = AppFactory::create();
 $errorMiddleware = $app->addErrorMiddleware(false, true, true);
 
 $errorHandler = $errorMiddleware->getDefaultErrorHandler();
-$errorHandler->forceContentType('text/html');
-$errorHandler->registerErrorRenderer('text/html', function ($error, $request, $response) use ($container) {
-    $params = [
-        'title' => 'Ошибка 500'
-    ];
-    return $container->get('renderer')->render($response->withStatus(500), '500.phtml', $params);
-});
+if (method_exists($errorHandler, 'forceContentType')) {
+    $errorHandler->forceContentType('text/html');
+}
+if (method_exists($errorHandler, 'registerErrorRenderer')) {
+    $errorHandler->registerErrorRenderer('text/html', function ($error, $request, $response) use ($container) {
+        $params = ['title' => 'Ошибка 500'];
+        return $container->get('renderer')->render($response->withStatus(500), '500.phtml', $params);
+    });
+}
 
 $router = $app->getRouteCollector()->getRouteParser();
 $renderer = $container->get('renderer');

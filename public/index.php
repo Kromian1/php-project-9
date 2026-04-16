@@ -50,17 +50,6 @@ $container->set('HtmlParser', function () {
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 $errorMiddleware = $app->addErrorMiddleware(false, true, true);
-//обработка внутренних ошибок сервера
-$errorHandler = $errorMiddleware->getDefaultErrorHandler();
-if (method_exists($errorHandler, 'forceContentType')) {
-    $errorHandler->forceContentType('text/html');
-}
-if (method_exists($errorHandler, 'registerErrorRenderer')) {
-    $errorHandler->registerErrorRenderer('text/html', function ($error, $request, $response) use ($container) {
-        $params = ['title' => 'Ошибка 500'];
-        return $container->get('renderer')->render($response->withStatus(500), '500.phtml', $params);
-    });
-}
 
 $router = $app->getRouteCollector()->getRouteParser();
 $renderer = $container->get('renderer');

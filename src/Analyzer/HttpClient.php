@@ -1,6 +1,6 @@
 <?php
 
-namespace Analyzer;
+namespace Analyzer\Analyzer;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;

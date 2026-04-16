@@ -1,6 +1,6 @@
 <?php
 
-namespace Analyzer;
+namespace Analyzer\Normalizer;
 
 use Carbon\Carbon;
 

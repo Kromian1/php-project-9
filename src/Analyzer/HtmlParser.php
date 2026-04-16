@@ -1,6 +1,6 @@
 <?php
 
-namespace Analyzer;
+namespace Analyzer\Analyzer;
 
 use Symfony\Component\DomCrawler\Crawler;
 

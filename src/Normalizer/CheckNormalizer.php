@@ -1,8 +1,6 @@
 <?php
 
-namespace Analyzer;
-
-use Carbon\Carbon;
+namespace Analyzer\Normalizer;
 
 class CheckNormalizer
 {

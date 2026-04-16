@@ -49,7 +49,16 @@ $container->set('HtmlParser', function () {
 
 AppFactory::setContainer($container);
 $app = AppFactory::create();
-$app->addErrorMiddleware(true, true, true);
+$errorMiddleware = $app->addErrorMiddleware(false, true, true);
+
+$errorHandler = $errorMiddleware->getDefaultErrorHandler();
+$errorHandler->forceContentType('text/html');
+$errorHandler->registerErrorRenderer('text/html', function ($error, $request, $response) use ($container) {
+    $params = [
+        'title' => 'Ошибка 500'
+    ];
+    return $container->get('renderer')->render($response->withStatus(500), '500.phtml', $params);
+});
 
 $router = $app->getRouteCollector()->getRouteParser();
 $renderer = $container->get('renderer');
@@ -123,6 +132,13 @@ $app->get('/urls/{id:\d+}', function (Request $request, Response $response, $arg
     $id = $args['id'];
     //получение url
     $url = $urlRepository->getUrl($id);
+    //если url не существует, возвращаем 404
+    if (!$url) {
+        $params = [
+            'title' => 'Ошибка 404'
+        ];
+        return $container->get('renderer')->render($response->withStatus(404), '404.phtml', $params);
+    }
     $normalizedTimeUrl = $container->get('TimeNormalizer')->normalizeTime($url);
 
     if (!$normalizedTimeUrl) {
@@ -174,5 +190,12 @@ $app->post(
         }
     }
 )->setName('url.check.post');
+
+$app->any('/{slug:.+}', function (Request $request, Response $response) use ($container) {
+    $params = [
+        'title' => 'Ошибка 404'
+    ];
+    return $container->get('renderer')->render($response->withStatus(404), '404.phtml', $params);
+});
 
 $app->run();

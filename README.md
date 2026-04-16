@@ -58,18 +58,19 @@
     ├── Analyzer/
     │   ├── HttpClient.php      # HTTP-запросы через Guzzle
     │   ├── HtmlParser.php      # Парсинг HTML (DomCrawler)
-    │   ├── UrlValidator.php    # Валидация и нормализация URL
-    │   ├── TimeNormalizer.php  # Форматирование дат
-    │   └── CheckNormalizer.php # Форматирование данных проверок
+    │   └── UrlValidator.php    # Валидация и нормализация URL
     ├── Db/
     │   ├── Connection.php      # Подключение к PostgreSQL
     │   └── UrlRepository.php   # Работа с БД (DAO)
+    |   Normalizer/
+    |   ├── TimeNormalizer.php  # Форматирование дат
+    │   └── CheckNormalizer.php # Форматирование данных проверок
     templates/
     ├── layout.phtml            # Базовый шаблон (Bootstrap, меню)
     ├── index.phtml             # Главная страница (форма добавления)
     └── urls/
-        ├── urls.phtml          # Список всех сайтов
-        └── url.phtml           # Детальная страница сайта
+        ├── index.phtml          # Список всех сайтов
+        └── show.phtml           # Детальная страница сайта
 
 ## Требования
 

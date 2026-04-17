@@ -7,6 +7,8 @@ CREATE TABLE urls (
     created_at TIMESTAMP DEFAULT current_timestamp NOT NULL
 );
 
+CREATE INDEX ON urls(created_at);
+
 CREATE TABLE url_checks (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     url_id BIGINT REFERENCES urls(id) NOT NULL,
@@ -16,3 +18,6 @@ CREATE TABLE url_checks (
     description TEXT,
     created_at TIMESTAMP DEFAULT current_timestamp NOT NULL
 );
+
+CREATE INDEX ON url_checks(created_at);
+CREATE INDEX ON url_checks(url_id);

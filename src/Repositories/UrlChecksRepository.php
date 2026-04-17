@@ -2,6 +2,8 @@
 
 namespace Analyzer\Repositories;
 
+use PDO;
+
 class UrlChecksRepository
 {
     private PDO $pdo;
@@ -29,23 +31,21 @@ class UrlChecksRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getLastCheck(string $id): array
+    public function getLastChecks(): array
     {
         $sql = "
-        SELECT
+        SELECT DISTINCT ON (url_id)
+            url_id,
             status_code
         FROM
             url_checks
-        WHERE
-            url_id = :id
         ORDER BY
+            url_id ASC,
             created_at DESC
-        LIMIT 1
         ";
         $stmt = $this->pdo->prepare($sql);
-        $stmt->bindParam(':id', $id);
         $stmt->execute();
-        return $stmt->fetchColumn();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function setCheck(string $id, string $statusCode, array $data): void

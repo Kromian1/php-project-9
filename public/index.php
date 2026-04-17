@@ -8,6 +8,7 @@ use Analyzer\Normalizer\CheckNormalizer;
 use Analyzer\Normalizer\TimeNormalizer;
 use Analyzer\Repositories\UrlChecksRepository;
 use Analyzer\Repositories\UrlRepository;
+use Analyzer\Services\UrlService;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -52,6 +53,9 @@ $container->set('UrlRepository', function () {
 $container->set('UrlChecksRepository', function () {
     $conn = Connection::get();
     return new UrlChecksRepository($conn);
+});
+$container->set('UrlService', function () use ($container) {
+    return new UrlService($container->get('UrlRepository'), $container->get('UrlChecksRepository'));
 });
 
 AppFactory::setContainer($container);
@@ -139,8 +143,7 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 
 $app->get('/urls', function (Request $request, Response $response) use ($container) {
     //получаем список сайтов из БД с последним состоянием (код ответа)
-    $urlRepository = $container->get('UrlRepository');
-    $urls = $urlRepository->getAllUrls();
+    $urls = $container->get('UrlService')->getUrlsWithCode();
     $normalizedTimeUrls = $container->get('TimeNormalizer')->normalizeTime($urls);
 
     $params = [

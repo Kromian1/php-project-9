@@ -39,7 +39,7 @@ class UrlRepository
         return $this->pdo->lastInsertId();
     }
 
-    public function getUrl(string $id): array
+    public function getUrl(string $id): mixed
     {
         $sql = "
     SELECT
@@ -77,7 +77,7 @@ class UrlRepository
     SELECT 
         id,
         name,
-        created_at,
+        created_at
     FROM urls
     ORDER BY created_at DESC
         ";

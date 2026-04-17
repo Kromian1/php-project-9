@@ -53,7 +53,11 @@ $app = AppFactory::create();
 
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
+//кастомный обработчик исключений
 $customErrorHandler = function (Request $request, Throwable $exception) use ($container) {
+    //по умолчанию код ошибки 500
+    $statusCode = 500;
+
     if (method_exists($exception, 'getStatusCode')) {
         $statusCode = $exception->getStatusCode();
     }

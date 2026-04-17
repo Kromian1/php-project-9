@@ -1,6 +1,6 @@
 <?php
 
-namespace Analyzer\Db;
+namespace Analyzer\Repositories;
 
 use PDO;
 

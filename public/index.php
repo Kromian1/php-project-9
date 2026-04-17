@@ -3,23 +3,21 @@
 use Analyzer\Analyzer\HtmlParser;
 use Analyzer\Analyzer\HttpClient;
 use Analyzer\Analyzer\UrlValidator;
+use Analyzer\Db\Connection;
 use Analyzer\Normalizer\CheckNormalizer;
 use Analyzer\Normalizer\TimeNormalizer;
-use Analyzer\Db\Connection;
-use Analyzer\Db\UrlRepository;
+use Analyzer\Repositories\UrlRepository;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpNotFoundException;
 use Slim\Factory\AppFactory;
-use Slim\Views\PhpRenderer;
 use Slim\Flash\Messages;
+use Slim\Views\PhpRenderer;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 session_start();
-
-$conn = Connection::get();
-$urlRepository = new UrlRepository($conn);
 
 $container = new Container();
 $container->set('renderer', function () use ($container) {
@@ -46,6 +44,10 @@ $container->set('TimeNormalizer', function () {
 $container->set('HtmlParser', function () {
     return new HtmlParser();
 });
+$container->set('UrlRepository', function () {
+    $conn = Connection::get();
+    return new UrlRepository($conn);
+});
 
 AppFactory::setContainer($container);
 $app = AppFactory::create();
@@ -55,13 +57,7 @@ $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
 //кастомный обработчик исключений
 $customErrorHandler = function (Request $request, Throwable $exception) use ($container) {
-    //по умолчанию код ошибки 500
-    $statusCode = 500;
-
-    if (method_exists($exception, 'getStatusCode')) {
-        $statusCode = $exception->getStatusCode();
-    }
-
+    $statusCode = $exception->getCode() === 404 ? 404 : 500;
     if ($statusCode === 404) {
         $template = "404.phtml";
         $title = '404 Not Found';
@@ -96,7 +92,8 @@ $app->get('/', function (Request $request, Response $response) use ($container) 
 })->setName('home');
 
 
-$app->post('/urls', function (Request $request, Response $response) use ($container, $urlRepository) {
+$app->post('/urls', function (Request $request, Response $response) use ($container) {
+    $urlRepository = $container->get('UrlRepository');
     $parsedBody = $request->getParsedBody();
     $data = is_array($parsedBody) ? $parsedBody : (array) $parsedBody;
     $url = $data['url'] ?? '';
@@ -135,8 +132,9 @@ $app->post('/urls', function (Request $request, Response $response) use ($contai
 })->setName('urls.post');
 
 
-$app->get('/urls', function (Request $request, Response $response) use ($container, $urlRepository) {
+$app->get('/urls', function (Request $request, Response $response) use ($container) {
     //получаем список сайтов из БД с последним состоянием (код ответа)
+    $urlRepository = $container->get('UrlRepository');
     $urls = $urlRepository->getAllUrls();
     $normalizedTimeUrls = $container->get('TimeNormalizer')->normalizeTime($urls);
 
@@ -149,16 +147,14 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
 })->setName('urls.get');
 
 
-$app->get('/urls/{id:\d+}', function (Request $request, Response $response, $args) use ($container, $urlRepository) {
+$app->get('/urls/{id:\d+}', function (Request $request, Response $response, $args) use ($container) {
     $id = $args['id'];
+    $urlRepository = $container->get('UrlRepository');
     //получение url
     $url = $urlRepository->getUrl($id);
     //если url не существует, возвращаем 404
     if (!$url) {
-        $params = [
-            'title' => 'Ошибка 404'
-        ];
-        return $container->get('renderer')->render($response->withStatus(404), '404.phtml', $params);
+        throw new HttpNotFoundException($request);
     }
     $normalizedTimeUrl = $container->get('TimeNormalizer')->normalizeTime($url);
 
@@ -181,8 +177,9 @@ $app->get('/urls/{id:\d+}', function (Request $request, Response $response, $arg
 
 $app->post(
     '/urls/{id:\d+}/checks',
-    function (Request $request, Response $response, $args) use ($container, $urlRepository) {
+    function (Request $request, Response $response, $args) use ($container) {
         $id = $args['id'];
+        $urlRepository = $container->get('UrlRepository');
         //получаем url, для проверки ресурса
         $url = $urlRepository->getUrlName($id);
 

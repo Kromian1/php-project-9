@@ -49,7 +49,32 @@ $container->set('HtmlParser', function () {
 
 AppFactory::setContainer($container);
 $app = AppFactory::create();
-$errorMiddleware = $app->addErrorMiddleware(false, true, true);
+
+
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+
+$customErrorHandler = function (Request $request, Throwable $exception) use ($container) {
+    if (method_exists($exception, 'getStatusCode')) {
+        $statusCode = $exception->getStatusCode();
+    }
+
+    if ($statusCode === 404) {
+        $template = "404.phtml";
+        $title = '404 Not Found';
+    } else {
+        $template = "500.phtml";
+        $title = '500 Internal Server Error';
+    }
+
+    $params = [
+        'title' => $title
+    ];
+
+    $response = new \Slim\Psr7\Response($statusCode);
+    return $container->get('renderer')->render($response, $template, $params);
+};
+
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 $router = $app->getRouteCollector()->getRouteParser();
 $renderer = $container->get('renderer');
@@ -182,12 +207,5 @@ $app->post(
         }
     }
 )->setName('url.check.post');
-
-$app->any('/{slug:.+}', function (Request $request, Response $response) use ($container) {
-    $params = [
-        'title' => 'Ошибка 404'
-    ];
-    return $container->get('renderer')->render($response->withStatus(404), '404.phtml', $params);
-});
 
 $app->run();

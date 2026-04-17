@@ -13,7 +13,7 @@ class UrlRepository
         $this->pdo = $pdo;
     }
 
-    public function getId(string $url)
+    public function getId(string $url): int
     {
         $sql = "
     SELECT
@@ -29,7 +29,7 @@ class UrlRepository
         return $stmt->fetchColumn();
     }
 
-    public function addUrl(string $url)
+    public function addUrl(string $url): string
     {
         $sql = "INSERT INTO urls (name) VALUES (:name)";
         $stmt = $this->pdo->prepare($sql);
@@ -39,7 +39,7 @@ class UrlRepository
         return $this->pdo->lastInsertId();
     }
 
-    public function getUrl(string $id)
+    public function getUrl(string $id): array
     {
         $sql = "
     SELECT
@@ -55,7 +55,7 @@ class UrlRepository
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getUrlName(string $id)
+    public function getUrlName(string $id): mixed
     {
         $sql = "
     SELECT
@@ -71,24 +71,15 @@ class UrlRepository
         return $stmt->fetchColumn();
     }
 
-    public function getAllUrls()
+    public function getUrls(): array
     {
         $sql = "
-    WITH ranked_checks AS (
-        SELECT 
-            url_id,
-            status_code,
-            ROW_NUMBER() OVER (PARTITION BY url_id ORDER BY created_at DESC) AS rn
-        FROM url_checks
-    )
     SELECT 
-        u.id,
-        u.name,
-        u.created_at,
-        rc.status_code
-    FROM urls u
-    LEFT JOIN ranked_checks rc ON u.id = rc.url_id AND rc.rn = 1
-    ORDER BY u.created_at DESC
+        id,
+        name,
+        created_at,
+    FROM urls
+    ORDER BY created_at DESC
         ";
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

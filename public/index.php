@@ -202,7 +202,7 @@ $app->post(
             $parsedBody = $container->get('HtmlParser')->parse($body);
             $normalizedBody = $container->get('checkNormalizer')->normalizeCheckBody($parsedBody);
             //вставляем результат запроса к ресурсу в БД
-            $urlChecksRepository->updateChecks($id, $statusCode, $normalizedBody);
+            $urlChecksRepository->setCheck($id, $statusCode, $normalizedBody);
             return $response
                 ->withHeader('Location', $container->get('router')
                     ->urlFor('url.get', ['id' => $id]))

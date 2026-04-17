@@ -11,7 +11,7 @@ class UrlChecksRepository
         $this->pdo = $pdo;
     }
 
-    public function getChecks(string $id)
+    public function getChecks(string $id): array
     {
         $sql = "
     SELECT
@@ -29,7 +29,26 @@ class UrlChecksRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function updateChecks(string $id, string $statusCode, array $data)
+    public function getLastCheck(string $id): array
+    {
+        $sql = "
+        SELECT
+            status_code
+        FROM
+            url_checks
+        WHERE
+            url_id = :id
+        ORDER BY
+            created_at DESC
+        LIMIT 1
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
+    public function setCheck(string $id, string $statusCode, array $data): void
     {
         $sql = "
     INSERT INTO url_checks (url_id, status_code, h1, title, description)

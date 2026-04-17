@@ -6,6 +6,7 @@ use Analyzer\Analyzer\UrlValidator;
 use Analyzer\Db\Connection;
 use Analyzer\Normalizer\CheckNormalizer;
 use Analyzer\Normalizer\TimeNormalizer;
+use Analyzer\Repositories\UrlChecksRepository;
 use Analyzer\Repositories\UrlRepository;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -47,6 +48,10 @@ $container->set('HtmlParser', function () {
 $container->set('UrlRepository', function () {
     $conn = Connection::get();
     return new UrlRepository($conn);
+});
+$container->set('UrlChecksRepository', function () {
+    $conn = Connection::get();
+    return new UrlChecksRepository($conn);
 });
 
 AppFactory::setContainer($container);
@@ -150,6 +155,7 @@ $app->get('/urls', function (Request $request, Response $response) use ($contain
 $app->get('/urls/{id:\d+}', function (Request $request, Response $response, $args) use ($container) {
     $id = $args['id'];
     $urlRepository = $container->get('UrlRepository');
+    $urlChecksRepository = $container->get('UrlChecksRepository');
     //получение url
     $url = $urlRepository->getUrl($id);
     //если url не существует, возвращаем 404
@@ -163,7 +169,7 @@ $app->get('/urls/{id:\d+}', function (Request $request, Response $response, $arg
     }
 
     //получаем данные по проверкам url
-    $resultChecks = $urlRepository->getChecks($id);
+    $resultChecks = $urlChecksRepository->getChecks($id);
     $normalizedChecks = $container->get('TimeNormalizer')->normalizeTime($resultChecks, 'Y-m-d H:i');
 
     $params = [
@@ -180,6 +186,8 @@ $app->post(
     function (Request $request, Response $response, $args) use ($container) {
         $id = $args['id'];
         $urlRepository = $container->get('UrlRepository');
+        $urlChecksRepository = $container->get('UrlChecksRepository');
+
         //получаем url, для проверки ресурса
         $url = $urlRepository->getUrlName($id);
 
@@ -194,7 +202,7 @@ $app->post(
             $parsedBody = $container->get('HtmlParser')->parse($body);
             $normalizedBody = $container->get('checkNormalizer')->normalizeCheckBody($parsedBody);
             //вставляем результат запроса к ресурсу в БД
-            $urlRepository->updateChecks($id, $statusCode, $normalizedBody);
+            $urlChecksRepository->updateChecks($id, $statusCode, $normalizedBody);
             return $response
                 ->withHeader('Location', $container->get('router')
                     ->urlFor('url.get', ['id' => $id]))

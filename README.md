@@ -60,15 +60,18 @@
     │   ├── HtmlParser.php      # Парсинг HTML (DomCrawler)
     │   └── UrlValidator.php    # Валидация и нормализация URL
     ├── Db/
-    │   ├── Connection.php      # Подключение к PostgreSQL
-    │   └── UrlRepository.php   # Работа с БД (DAO)
+    │   └── Connection.php      # Подключение к PostgreSQL
     |   Normalizer/
     |   ├── TimeNormalizer.php  # Форматирование дат
     │   └── CheckNormalizer.php # Форматирование данных проверок
+    |   Repositories/
+    |   ├── UrlRepository.php  # Работа с БД (PDO)
+    │   └── UrlChecksRepository.php # Работа с БД (PDO)
     templates/
     ├── layout.phtml            # Базовый шаблон (Bootstrap, меню)
     ├── index.phtml             # Главная страница (форма добавления)
     ├── 404.phtml               # Страница ошибки 404
+    ├── 500.phtml               # Страница ошибки 500
     └── urls/
         ├── index.phtml          # Список всех сайтов
         └── show.phtml           # Детальная страница сайта

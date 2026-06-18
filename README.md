@@ -1,16 +1,16 @@
-### Hexlet tests and linter status:
+### Статус проекта:
+[![check.yml](https://github.com/Kromian1/php-project-9/actions/workflows/check.yml/badge.svg)](https://github.com/Kromian1/php-project-9/actions/workflows/check.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
-[![Actions Status](https://github.com/Kromian1/php-project-9/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Kromian1/php-project-9/actions)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Kromian1_php-project-9&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Kromian1_php-project-9)
 
 
-## Демо:
-[Анализатор страниц на Render.com](https://php-project-9-d7cw.onrender.com)
+## Page Analyzer:
+**Демо:** [Анализатор страниц на Render.com](https://php-project-9-d7cw.onrender.com)
 
 ## Описание
 
@@ -36,6 +36,21 @@
 - ✅ Flash-сообщения об успехе/ошибках
 - ✅ Адаптивный дизайн на Bootstrap
 
+## Скриншоты
+
+### Главная страница
+
+<img src="docs/images/homepage.png" alt="Main page" width="800">
+
+### Список Url
+
+
+<img src="docs/images/urls-list.png" alt="Urls list" width="800">
+
+### Детализация Url
+
+<img src="docs/images/url-details.png" alt="Url details" width="800">
+
 ## Технологии
 
 | Компонент | Технология |
@@ -54,27 +69,37 @@
 
 ## Структура
 
-    src/
-    ├── Analyzer/
-    │   ├── HttpClient.php      # HTTP-запросы через Guzzle
-    │   ├── HtmlParser.php      # Парсинг HTML (DomCrawler)
-    │   └── UrlValidator.php    # Валидация и нормализация URL
-    ├── Db/
-    │   └── Connection.php      # Подключение к PostgreSQL
-    |   Normalizer/
-    |   ├── TimeNormalizer.php  # Форматирование дат
-    │   └── CheckNormalizer.php # Форматирование данных проверок
-    |   Repositories/
-    |   ├── UrlRepository.php  # Работа с БД (PDO)
-    │   └── UrlChecksRepository.php # Работа с БД (PDO)
-    templates/
-    ├── layout.phtml            # Базовый шаблон (Bootstrap, меню)
-    ├── index.phtml             # Главная страница (форма добавления)
-    ├── 404.phtml               # Страница ошибки 404
-    ├── 500.phtml               # Страница ошибки 500
-    └── urls/
-        ├── index.phtml          # Список всех сайтов
-        └── show.phtml           # Детальная страница сайта
+| Каталог | Назначение |
+|----------|------------|
+| `src/Analyzer` | Анализ URL и HTML-страниц |
+| `src/Db` | Подключение к PostgreSQL |
+| `src/Repositories` | Работа с данными |
+| `src/Normalizer` | Подготовка данных для отображения |
+| `src/Services` | Бизнес-логика приложения |
+| `templates` | Шаблоны страниц |
+| `public` | Публичные ресурсы и точка входа |
+
+## Схема базы данных
+
+### urls
+
+| Поле | Тип |
+|--------|--------|
+| id | bigint |
+| name | varchar |
+| created_at | timestamp |
+
+### url_checks
+
+| Поле | Тип |
+|--------|--------|
+| id | bigint |
+| url_id | bigint |
+| status_code | integer |
+| h1 | text |
+| title | text |
+| description | text |
+| created_at | timestamp |
 
 ## Требования
 
@@ -87,41 +112,41 @@
 
 ### 1. Клонирование репозитория
 
-git clone https://github.com/Kromian1/php-project-9.git
+`git clone https://github.com/Kromian1/php-project-9.git`
 
-cd php-project-9
+`cd php-project-9`
 
 ### 2. Установка зависимостей
 
-make install
+`make install`
 
 ### 3. Настройка базы данных
 
 Создайте базу данных PostgreSQL:
 
-createdb page_analyzer_dev
+`createdb page_analyzer_dev`
 
 Экспортируйте переменную окружения:
 
-export DATABASE_URL=postgresql://localhost:5432/page_analyzer_dev
+`export DATABASE_URL=postgresql://localhost:5432/page_analyzer_dev`
 
 Выполните миграцию:
 
-psql -a -d $DATABASE_URL -f database.sql
+`psql -a -d $DATABASE_URL -f database.sql`
 
 ### 4. Запуск приложения
 
-make start
+`make start`
 
 Приложение будет доступно по адресу: http://localhost:8000
 
 ### 5. Запуск тестов
 
-make test
+`make test`
 
 ### 6. Линтинг кода
 
-make lint
+`make lint`
 
 ## API Эндпоинты
 | Метод | Путь | Описание |
@@ -136,12 +161,12 @@ make lint
 
 Добавление сайта
 
-curl -X POST http://localhost:8000/urls \
-  -d "url=https://example.com"
+`curl -X POST http://localhost:8000/urls \
+  -d "url=https://example.com"`
   
 Проверка сайта
 
-curl -X POST http://localhost:8000/urls/1/checks
+`curl -X POST http://localhost:8000/urls/1/checks`
 
 ## Деплой
 Приложение задеплоено на Render.com:
@@ -156,4 +181,4 @@ curl -X POST http://localhost:8000/urls/1/checks
 
 Добавьте переменную окружения DATABASE_URL в настройках веб-сервиса
 
-Выполните миграцию: psql -d $DATABASE_URL -f database.sql
+Выполните миграцию: `psql -d $DATABASE_URL -f database.sql`

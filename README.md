@@ -182,3 +182,9 @@
 Добавьте переменную окружения DATABASE_URL в настройках веб-сервиса
 
 Выполните миграцию: `psql -d $DATABASE_URL -f database.sql`
+
+## Автор
+
+**Михаил Кузнецов**
+
+**GitHub:** https://github.com/Kromian1

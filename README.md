@@ -40,16 +40,15 @@
 
 ### Главная страница
 
-<img src="docs/images/homepage.png" alt="Main page" width="800">
+![homepage.png](docs/images/homepage.png)
 
 ### Список Url
 
+![urls-list.png](docs/images/urls-list.png)
 
-<img src="docs/images/urls-list.png" alt="Urls list" width="800">
+### Страница Url
 
-### Детализация Url
-
-<img src="docs/images/url-details.png" alt="Url details" width="800">
+![url-details.png](docs/images/url-details.png)
 
 ## Технологии
 
